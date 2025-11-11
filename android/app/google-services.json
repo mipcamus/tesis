@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "431259803667",
+    "project_id": "presenteapp-97f7f",
+    "storage_bucket": "presenteapp-97f7f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431259803667:android:cdff39c796f643b77fdfe6",
+        "android_client_info": {
+          "package_name": "com.example.tesis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCp8UCcovMpruGR3W4Tt4nvsvqG0AdUxes"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
