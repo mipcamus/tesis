@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/courses.dart';
 import '../services/course_service.dart';
 import '../services/user_courses_service.dart';
+import 'course_classes_page.dart';
 
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
@@ -36,7 +37,7 @@ class CoursesPage extends StatelessWidget {
             return const Center(child: Text('Aún no tienes cursos asignados.'));
           }
 
-          // Esto trae los cursos del usuario actual
+          // Ahora pedimos a Firestore solo los cursos con esos IDs
           return StreamBuilder<List<Course>>(
             stream: courseService.listenCoursesByIds(enrolledIds),
             builder: (context, coursesSnapshot) {
@@ -69,6 +70,14 @@ class CoursesPage extends StatelessWidget {
                   return ListTile(
                     title: Text(course.title),
                     subtitle: Text(course.description),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              CourseClassesPage(course_id: course.id),
+                        ),
+                      );
+                    },
                   );
                 },
               );
