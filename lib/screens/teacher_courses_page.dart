@@ -31,13 +31,13 @@ class TeacherCoursesPage extends StatelessWidget {
       );
     }
 
-    final teacherId = currentUser.uid;
+    final teacher_id = currentUser.uid;
     final courseService = CourseService();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mis cursos (profesor)')),
       body: StreamBuilder<List<Course>>(
-        stream: courseService.listenCoursesByTeacher(teacherId),
+        stream: courseService.listenCoursesByTeacher(teacher_id),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(

@@ -5,13 +5,13 @@ class Course {
   final String id;
   final String title;
   final String description;
-  final String teacherId;
+  final String teacher_id;
 
   const Course({
     required this.id,
     required this.title,
     required this.description,
-    required this.teacherId,
+    required this.teacher_id,
   });
 
   /// Esto es un map que es el tipo de dato de Firestore
@@ -19,7 +19,7 @@ class Course {
     return {
       'title': title,
       'description': description,
-      'teacher_id': teacherId,
+      'teacher_id': teacher_id,
     };
   }
 
@@ -28,7 +28,7 @@ class Course {
       id: id,
       title: data['title'] ?? '',
       description: data['description'] ?? '',
-      teacherId: data['teacher_id'] ?? '',
+      teacher_id: data['teacher_id'] ?? '',
     );
   }
 }

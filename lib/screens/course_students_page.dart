@@ -98,11 +98,11 @@ class _CourseStudentsPageState extends State<CourseStudentsPage> {
       }
 
       final userDoc = query.docs.first;
-      final studentId = userDoc.id;
+      final student_id = userDoc.id;
 
       await _studentsService.enrollStudentInCourse(
-        courseId: widget.course.id,
-        studentId: studentId,
+        course_id: widget.course.id,
+        student_id: student_id,
       );
 
       if (!mounted) return;

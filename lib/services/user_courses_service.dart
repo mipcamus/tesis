@@ -26,13 +26,13 @@ class UserCoursesService {
     return user.uid;
   }
 
-  /// course_students/{courseId_studentId} -> { course_id, student_id }
+  /// course_students/{course_id_student_id} -> { course_id, student_id }
   CollectionReference<Map<String, dynamic>> get _courseStudentsCollection {
     return _firestore.collection('course_students');
   }
 
   /// Trae los IDs de cursos en los que el usuario actual está inscrito
-  Stream<Set<String>> listenEnrolledCourseIds() {
+  Stream<Set<String>> listenEnrolledCourse_ids() {
     return _courseStudentsCollection
         .where('student_id', isEqualTo: _uid)
         .snapshots()
@@ -45,23 +45,23 @@ class UserCoursesService {
   }
 
   /// (Opcional) Inscribir al usuario actual en un curso (para pruebas)
-  Future<void> enrollCurrentUserInCourse(String courseId) async {
-    final docId = '${courseId}_$_uid';
-    await _courseStudentsCollection.doc(docId).set({
-      'course_id': courseId,
+  Future<void> enrollCurrentUserInCourse(String course_id) async {
+    final doc_id = '${course_id}_$_uid';
+    await _courseStudentsCollection.doc(doc_id).set({
+      'course_id': course_id,
       'student_id': _uid,
     });
   }
 
   /// (Opcional) Inscribir un usuario específico en un curso (profesor inscribe alumno)
   Future<void> enrollUserInCourse({
-    required String userId,
-    required String courseId,
+    required String user_id,
+    required String course_id,
   }) async {
-    final docId = '${courseId}_$userId';
-    await _courseStudentsCollection.doc(docId).set({
-      'course_id': courseId,
-      'student_id': userId,
+    final doc_id = '${course_id}_$user_id';
+    await _courseStudentsCollection.doc(doc_id).set({
+      'course_id': course_id,
+      'student_id': user_id,
     });
   }
 }

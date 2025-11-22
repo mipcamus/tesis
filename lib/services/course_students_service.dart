@@ -15,27 +15,27 @@ import '../models/user.dart';
 class CourseStudentsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// course_students/{courseId_studentId} -> { course_id, student_id }
+  /// course_students/{course_id_student_id} -> { course_id, student_id }
   CollectionReference<Map<String, dynamic>> get _courseStudentsCollection {
     return _firestore.collection('course_students');
   }
 
   /// Escucha los alumnos inscritos en un curso específico
-  Stream<List<UserModel>> listenStudentsByCourse(String courseId) {
+  Stream<List<UserModel>> listenStudentsByCourse(String course_id) {
     return _courseStudentsCollection
-        .where('course_id', isEqualTo: courseId)
+        .where('course_id', isEqualTo: course_id)
         .snapshots()
         .asyncMap((snapshot) async {
-          final studentIds = snapshot.docs
+          final student_ids = snapshot.docs
               .map((doc) => doc.data()['student_id'] as String)
               .toSet()
               .toList();
 
-          if (studentIds.isEmpty) return <UserModel>[];
+          if (student_ids.isEmpty) return <UserModel>[];
 
           final usersSnapshot = await _firestore
               .collection('users')
-              .where(FieldPath.documentId, whereIn: studentIds)
+              .where(FieldPath.documentId, whereIn: student_ids)
               .get();
 
           return usersSnapshot.docs
@@ -46,13 +46,13 @@ class CourseStudentsService {
 
   /// Inscribe un alumno en un curso (idempotente)
   Future<void> enrollStudentInCourse({
-    required String courseId,
-    required String studentId,
+    required String course_id,
+    required String student_id,
   }) async {
-    final docId = '${courseId}_$studentId'; // evita duplicados
-    await _courseStudentsCollection.doc(docId).set({
-      'course_id': courseId,
-      'student_id': studentId,
+    final doc_id = '${course_id}_$student_id'; // evita duplicados
+    await _courseStudentsCollection.doc(doc_id).set({
+      'course_id': course_id,
+      'student_id': student_id,
     });
   }
 }

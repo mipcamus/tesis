@@ -47,7 +47,7 @@ class _CreateCoursePageState extends State<CreateCoursePage> {
       await courseService.createCourse(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
-        teacherId: currentUser.uid,
+        teacher_id: currentUser.uid,
       );
 
       if (!mounted) return;

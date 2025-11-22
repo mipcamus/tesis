@@ -21,9 +21,9 @@ import '../services/course_classes_service.dart';
 import '../services/class_attendance_service.dart';
 
 class AttendancePage extends StatefulWidget {
-  final String courseId;
+  final String course_id;
 
-  const AttendancePage({super.key, required this.courseId});
+  const AttendancePage({super.key, required this.course_id});
 
   @override
   State<AttendancePage> createState() => _AttendancePageState();
@@ -33,7 +33,7 @@ class _AttendancePageState extends State<AttendancePage> {
   final _classService = CourseClassService();
   final _attendanceService = ClassAttendanceService();
 
-  String? _studentId;
+  String? _student_id;
   bool _loadingUser = true;
 
   @override
@@ -45,13 +45,13 @@ class _AttendancePageState extends State<AttendancePage> {
   Future<void> _loadCurrentUser() async {
     final user = FirebaseAuth.instance.currentUser;
     setState(() {
-      _studentId = user?.uid;
+      _student_id = user?.uid;
       _loadingUser = false;
     });
   }
 
   Future<void> _markAttendance(CourseClass courseClass) async {
-    if (_studentId == null) {
+    if (_student_id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No hay usuario autenticado')),
       );
@@ -60,9 +60,9 @@ class _AttendancePageState extends State<AttendancePage> {
 
     try {
       await _attendanceService.markAttendance(
-        courseId: courseClass.course_id,
-        classId: courseClass.id,
-        studentId: _studentId!,
+        course_id: courseClass.course_id,
+        class_id: courseClass.id,
+        student_id: _student_id!,
       );
 
       if (!mounted) return;
@@ -84,7 +84,7 @@ class _AttendancePageState extends State<AttendancePage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (_studentId == null) {
+    if (_student_id == null) {
       return const Scaffold(
         body: Center(child: Text('No hay alumno autenticado')),
       );
@@ -93,7 +93,7 @@ class _AttendancePageState extends State<AttendancePage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Asistencias')),
       body: StreamBuilder<List<CourseClass>>(
-        stream: _classService.listenClassesByCourse(widget.courseId),
+        stream: _classService.listenClassesByCourse(widget.course_id),
         builder: (context, classesSnapshot) {
           if (classesSnapshot.hasError) {
             return Center(
@@ -121,8 +121,8 @@ class _AttendancePageState extends State<AttendancePage> {
 
           return StreamBuilder<List<ClassAttendance>>(
             stream: _attendanceService.listenAttendanceForStudentInCourse(
-              courseId: widget.courseId,
-              studentId: _studentId!,
+              course_id: widget.course_id,
+              student_id: _student_id!,
             ),
             builder: (context, attendanceSnapshot) {
               if (attendanceSnapshot.hasError) {
@@ -147,7 +147,7 @@ class _AttendancePageState extends State<AttendancePage> {
 
                   // ¿Este alumno ya marcó asistencia en esta clase?
                   final alreadyMarked = attendanceList.any(
-                    (att) => att.classId == courseClass.id,
+                    (att) => att.class_id == courseClass.id,
                   );
 
                   final date = courseClass.date;

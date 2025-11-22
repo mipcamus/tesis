@@ -26,9 +26,9 @@ class CourseClassService {
   }
 
   /// clases de un curso específico
-  Stream<List<CourseClass>> listenClassesByCourse(String courseId) {
+  Stream<List<CourseClass>> listenClassesByCourse(String course_id) {
     return _classesCollection
-        .where('course_id', isEqualTo: courseId)
+        .where('course_id', isEqualTo: course_id)
         .orderBy('date')
         .snapshots()
         .map((snapshot) {
@@ -40,11 +40,11 @@ class CourseClassService {
 
   /// Crear una clase para un curso
   Future<String> createClass({
-    required String courseId,
+    required String course_id,
     required DateTime date,
   }) async {
     final docRef = await _classesCollection.add({
-      'course_id': courseId,
+      'course_id': course_id,
       'date': Timestamp.fromDate(date),
       'done': false,
     });

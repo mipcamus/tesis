@@ -92,7 +92,7 @@ class _CourseClassesPageState extends State<CourseClassesPage> {
 
     try {
       await _classService.createClass(
-        courseId: widget.course_id,
+        course_id: widget.course_id,
         date: dateTime,
       );
 

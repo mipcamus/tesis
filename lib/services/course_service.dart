@@ -52,21 +52,21 @@ class CourseService {
   Future<String> createCourse({
     required String title,
     required String description,
-    required String teacherId,
+    required String teacher_id,
   }) async {
     final docRef = await _coursesCollection.add({
       'title': title,
       'description': description,
-      'teacher_id': teacherId,
+      'teacher_id': teacher_id,
     });
 
     return docRef.id;
   }
 
   // cursos de un profesor
-  Stream<List<Course>> listenCoursesByTeacher(String teacherId) {
+  Stream<List<Course>> listenCoursesByTeacher(String teacher_id) {
     return _coursesCollection
-        .where('teacher_id', isEqualTo: teacherId)
+        .where('teacher_id', isEqualTo: teacher_id)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs

@@ -28,7 +28,7 @@ class CoursesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Mis cursos')),
       body: StreamBuilder<Set<String>>(
-        stream: userCoursesService.listenEnrolledCourseIds(),
+        stream: userCoursesService.listenEnrolledCourse_ids(),
         builder: (context, enrolledSnapshot) {
           if (enrolledSnapshot.hasError) {
             return Center(
@@ -42,15 +42,15 @@ class CoursesPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final enrolledIds = enrolledSnapshot.data ?? <String>{};
+          final enrolled_ids = enrolledSnapshot.data ?? <String>{};
 
-          if (enrolledIds.isEmpty) {
+          if (enrolled_ids.isEmpty) {
             return const Center(child: Text('Aún no tienes cursos asignados.'));
           }
 
           // Ahora pedimos a Firestore solo los cursos con esos IDs
           return StreamBuilder<List<Course>>(
-            stream: courseService.listenCoursesByIds(enrolledIds),
+            stream: courseService.listenCoursesByIds(enrolled_ids),
             builder: (context, coursesSnapshot) {
               if (coursesSnapshot.hasError) {
                 return Center(
@@ -84,7 +84,7 @@ class CoursesPage extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => AttendancePage(courseId: course.id),
+                          builder: (_) => AttendancePage(course_id: course.id),
                         ),
                       );
                     },

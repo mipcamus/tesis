@@ -21,26 +21,26 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ClassAttendance {
   final String id;
-  final String courseId;
-  final String classId;
-  final String studentId;
+  final String course_id;
+  final String class_id;
+  final String student_id;
   final bool present;
   final DateTime createdAt;
 
   const ClassAttendance({
     required this.id,
-    required this.courseId,
-    required this.classId,
-    required this.studentId,
+    required this.course_id,
+    required this.class_id,
+    required this.student_id,
     required this.present,
     required this.createdAt,
   });
 
   Map<String, dynamic> toMap() {
     return {
-      'course_id': courseId,
-      'class_id': classId,
-      'student_id': studentId,
+      'course_id': course_id,
+      'class_id': class_id,
+      'student_id': student_id,
       'present': present,
       'created_at': Timestamp.fromDate(createdAt),
     };
@@ -51,9 +51,9 @@ class ClassAttendance {
 
     return ClassAttendance(
       id: id,
-      courseId: data['course_id'] ?? '',
-      classId: data['class_id'] ?? '',
-      studentId: data['student_id'] ?? '',
+      course_id: data['course_id'] ?? '',
+      class_id: data['class_id'] ?? '',
+      student_id: data['student_id'] ?? '',
       present: data['present'] ?? false,
       createdAt: ts?.toDate() ?? DateTime.now(),
     );

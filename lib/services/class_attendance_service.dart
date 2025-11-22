@@ -28,33 +28,33 @@ class ClassAttendanceService {
 
   /// Marca asistencia de un alumno a una clase de un curso.
   Future<void> markAttendance({
-    required String courseId,
-    required String classId,
-    required String studentId,
+    required String course_id,
+    required String class_id,
+    required String student_id,
   }) async {
-    final docId = '${classId}_$studentId';
+    final doc_id = '${class_id}_$student_id';
 
     final attendance = ClassAttendance(
-      id: docId,
-      courseId: courseId,
-      classId: classId,
-      studentId: studentId,
+      id: doc_id,
+      course_id: course_id,
+      class_id: class_id,
+      student_id: student_id,
       present: true,
       createdAt: DateTime.now(),
     );
 
-    await _attendanceCollection.doc(docId).set(attendance.toMap());
+    await _attendanceCollection.doc(doc_id).set(attendance.toMap());
   }
 
   /// sistencias de un alumno en un curso.
   /// saber en qué clases ya marcó asistencia.
   Stream<List<ClassAttendance>> listenAttendanceForStudentInCourse({
-    required String courseId,
-    required String studentId,
+    required String course_id,
+    required String student_id,
   }) {
     return _attendanceCollection
-        .where('course_id', isEqualTo: courseId)
-        .where('student_id', isEqualTo: studentId)
+        .where('course_id', isEqualTo: course_id)
+        .where('student_id', isEqualTo: student_id)
         .snapshots()
         .map((snapshot) {
           return snapshot.docs
@@ -65,12 +65,12 @@ class ClassAttendanceService {
 
   /// (Opcional) Asistencia de un alumno para una clase específica.
   Stream<ClassAttendance?> listenAttendanceForClassAndStudent({
-    required String classId,
-    required String studentId,
+    required String class_id,
+    required String student_id,
   }) {
-    final docId = '${classId}_$studentId';
+    final doc_id = '${class_id}_$student_id';
 
-    return _attendanceCollection.doc(docId).snapshots().map((snap) {
+    return _attendanceCollection.doc(doc_id).snapshots().map((snap) {
       if (!snap.exists || snap.data() == null) return null;
       return ClassAttendance.fromFirestore(
         snap.id,
