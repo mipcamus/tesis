@@ -32,7 +32,7 @@ class UserCoursesService {
   }
 
   /// Trae los IDs de cursos en los que el usuario actual está inscrito
-  Stream<Set<String>> listenEnrolledCourse_ids() {
+  Stream<Set<String>> listenEnrolledCourseIds() {
     return _courseStudentsCollection
         .where('student_id', isEqualTo: _uid)
         .snapshots()
