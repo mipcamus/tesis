@@ -1,10 +1,21 @@
-// esta es la vista de cursos
+// -----------------------------------------------------------------------------
+// Vista: CoursesPage
+// -----------------------------------------------------------------------------
+// Muestra la lista de cursos en los que el usuario/alumno está inscrito.
+// Esta vista es el punto de entrada del usuario para navegar por sus cursos,
+// ver sus clases y la asistencia correspondiente.
+//
+// Esta vista se usa para:
+// - Ver cursos en los que el usuario está inscrito.
+// - Obtener la información de cada curso desde CourseService.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 
-import '../models/courses.dart';
+import '../models/course.dart';
 import '../services/course_service.dart';
 import '../services/user_courses_service.dart';
-import 'course_classes_page.dart';
+import 'attendance_page.dart';
 
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
@@ -73,8 +84,7 @@ class CoursesPage extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) =>
-                              CourseClassesPage(course_id: course.id),
+                          builder: (_) => AttendancePage(courseId: course.id),
                         ),
                       );
                     },

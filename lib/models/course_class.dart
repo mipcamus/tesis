@@ -1,10 +1,26 @@
+// -----------------------------------------------------------------------------
+// Modelo: CourseClass
+// -----------------------------------------------------------------------------
+// Representa una clase programada dentro de un curso
+//
+// Este modelo se usa para:
+// - Mostrar la lista de clases de un curso.
+// - Marcar una clase como realizada (done = true).
+//
+// Campos:
+//   - id: ID único del registro en Firestore.
+//   - course_id: ID del curso al que pertenece la clase.
+//   - date: Fecha y hora programada de la clase.
+//   - done: Indica si la clase se realizó (true) o está pendiente (false).
+// -----------------------------------------------------------------------------
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CourseClass {
   final String id;
   final String course_id;
-  final DateTime date; // fecha y hora de la clase
-  final bool done; // true = realizada, false = no realizada
+  final DateTime date;
+  final bool done;
 
   const CourseClass({
     required this.id,

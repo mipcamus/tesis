@@ -1,4 +1,17 @@
-// esta es la pagina para iniciar sesion
+// -----------------------------------------------------------------------------
+// Vista: LoginPage
+// -----------------------------------------------------------------------------
+// Pantalla de inicio de sesión de la aplicación. Permite que el usuario ingrese
+// sus credenciales (correo y contraseña) para autenticarse mediante Firebase
+// Authentication.
+//
+// Esta vista se usa para:
+// - Mostrar el formulario de login.
+// - Validar correo y contraseña antes de enviar.
+// - Autenticar al usuario utilizando FirebaseAuth.
+// - Redirigir a HomePage si el login es exitoso.
+// -----------------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
