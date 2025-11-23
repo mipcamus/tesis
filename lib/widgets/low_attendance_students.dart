@@ -35,14 +35,20 @@ class _LowAttendanceStudentsState extends State<LowAttendanceStudents> {
     final uri = Uri(
       scheme: 'mailto',
       path: email,
-      query:
-          'subject=Asistencia%20del%20curso&body=Hola,%20queremos%20hablar%20sobre%20tu%20asistencia%20en%20el%20curso%20${widget.course.title}.',
+      queryParameters: {
+        'subject': 'Asistencia del curso',
+        'body':
+            'Hola, queremos hablar sobre tu asistencia en el curso ${widget.course.title}.',
+      },
     );
 
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri);
-    } else {
-      if (!mounted) return;
+    // En lugar de canLaunchUrl -> usamos el bool que retorna launchUrl
+    final ok = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication, // fuerza abrir app externa
+    );
+
+    if (!ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('No se pudo abrir la app de correo')),
       );

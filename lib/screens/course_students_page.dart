@@ -170,7 +170,7 @@ class _CourseStudentsPageState extends State<CourseStudentsPage> {
                   },
                 ),
 
-                // NEW: sección de alumnos con baja asistencia
+                // alumnos con baja asistencia
                 LowAttendanceStudents(course: course),
               ],
             ),
@@ -178,7 +178,7 @@ class _CourseStudentsPageState extends State<CourseStudentsPage> {
         },
       ),
 
-      // 👉 Botón flotante + para inscribir alumno
+      // para inscribir alumno
       floatingActionButton: FloatingActionButton(
         onPressed: _isAdding ? null : _showAddStudentDialog,
         child: _isAdding

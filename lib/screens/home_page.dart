@@ -78,27 +78,29 @@ class HomePage extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Botón para ver cursos donde está inscrito (usa course_students vía UserCoursesService)
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const CoursesPage()),
-                    );
-                  },
-                  child: const Text('Ver cursos'),
-                ),
+                if (!isTeacher)
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CoursesPage()),
+                      );
+                    },
+                    child: const Text('Ver cursos'),
+                  ),
 
-                const SizedBox(height: 20),
+                if (!isTeacher) const SizedBox(height: 20),
 
-                // NEW: botón para ver recompensas / puntos
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.star),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const RewardsPage()),
-                    );
-                  },
-                  label: const Text('Ver mis recompensas'),
-                ),
+                // botón para ver recompensas / puntos
+                if (!isTeacher)
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.star),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const RewardsPage()),
+                      );
+                    },
+                    label: const Text('Ver mis recompensas'),
+                  ),
 
                 const SizedBox(height: 20),
 

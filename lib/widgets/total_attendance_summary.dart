@@ -1,4 +1,8 @@
-// lib/widgets/total_attendance_summary.dart
+// -----------------------------------------------------------------------------
+// Widget: TotalAttendanceSummary
+// -----------------------------------------------------------------------------
+// Muestra un resumen global de asistencia del alumno en todos sus cursos.
+// -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import '../services/attendance_stats_service.dart';
@@ -18,10 +22,20 @@ class TotalAttendanceSummary extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: FutureBuilder<double>(
-        future: statsService
-            .get_total_attendance_percentage_for_current_student(),
+      child: StreamBuilder<double>(
+        // 🔹 NUEVO: usamos un stream en vez de un future
+        stream: statsService
+            .listen_total_attendance_percentage_for_current_student(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return Center(
+              child: Text(
+                'Error al cargar asistencia: ${snapshot.error}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
           if (!snapshot.hasData) {
             return const Center(
               child: SizedBox(
@@ -39,7 +53,7 @@ class TotalAttendanceSummary extends StatelessWidget {
           final color = _getColorForPercentage(p);
 
           return SizedBox(
-            width: double.infinity, // ⬅️ ocupa TODO el ancho disponible
+            width: double.infinity,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -62,8 +76,6 @@ class TotalAttendanceSummary extends StatelessWidget {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 16),
-
-                  // spinner más grande, centrado
                   SizedBox(
                     width: 180,
                     height: 180,
@@ -95,7 +107,6 @@ class TotalAttendanceSummary extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 16),
                   Text(
                     'Asistencia Total',

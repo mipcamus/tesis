@@ -119,20 +119,9 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text('Ingresar'),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: signUp,
-                    child: const Text('Crear cuenta'),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 8),
-            TextButton(
-              onPressed: signInAnon,
-              child: const Text('Entrar como invitado'),
-            ),
             if (error != null) ...[
               const SizedBox(height: 16),
               Text(error!, style: const TextStyle(color: Colors.red)),
