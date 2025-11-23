@@ -17,6 +17,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/course.dart';
 import '../models/user.dart';
 import '../services/course_students_service.dart';
+import '../widgets/low_attendance_students.dart';
 
 class CourseStudentsPage extends StatefulWidget {
   final Course course;
@@ -150,18 +151,29 @@ class _CourseStudentsPageState extends State<CourseStudentsPage> {
             );
           }
 
-          return ListView.separated(
-            itemCount: students.length,
-            separatorBuilder: (_, __) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final student = students[index];
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                ListView.separated(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
+                  itemCount: students.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final student = students[index];
 
-              return ListTile(
-                title: Text('${student.name} ${student.last_name}'),
-                subtitle: Text('${student.mail}\nRUT: ${student.rut}'),
-                isThreeLine: true,
-              );
-            },
+                    return ListTile(
+                      title: Text('${student.name} ${student.last_name}'),
+                      subtitle: Text('${student.mail}\nRUT: ${student.rut}'),
+                      isThreeLine: true,
+                    );
+                  },
+                ),
+
+                // NEW: sección de alumnos con baja asistencia
+                LowAttendanceStudents(course: course),
+              ],
+            ),
           );
         },
       ),

@@ -42,6 +42,45 @@ class AttendanceStatsService {
     return stats.percentage;
   }
 
+  /// Versión para profesor:
+  /// Calcula las stats de asistencia de UN alumno específico en UN curso.
+  Future<CourseAttendanceStats> get_course_attendance_stats_for_student({
+    required String course_id,
+    required String student_id,
+  }) async {
+    // Total de clases realizadas (done = true) de ese curso
+    final classes_snapshot = await _classes_collection
+        .where('course_id', isEqualTo: course_id)
+        .where('done', isEqualTo: true)
+        .get();
+
+    final total_done_classes = classes_snapshot.size;
+
+    if (total_done_classes == 0) {
+      return CourseAttendanceStats(
+        attended_count: 0,
+        total_done_classes: 0,
+        percentage: 0.0,
+      );
+    }
+
+    // Clases a las que ESTE alumno asistió en ese curso
+    final attended_snapshot = await _attendance_collection
+        .where('course_id', isEqualTo: course_id)
+        .where('student_id', isEqualTo: student_id)
+        .where('present', isEqualTo: true)
+        .get();
+
+    final attended_count = attended_snapshot.size;
+    final percentage = attended_count * 100.0 / total_done_classes;
+
+    return CourseAttendanceStats(
+      attended_count: attended_count,
+      total_done_classes: total_done_classes,
+      percentage: percentage,
+    );
+  }
+
   /// Versión completa: % + totales para un curso
   Future<CourseAttendanceStats> get_course_attendance_stats(
     String course_id,
