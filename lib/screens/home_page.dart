@@ -18,6 +18,7 @@ import 'courses_page.dart';
 import 'create_user_page.dart';
 import 'create_course_page.dart';
 import 'teacher_courses_page.dart';
+import 'rewards_page.dart';
 
 class HomePage extends StatelessWidget {
   final String email;
@@ -84,6 +85,19 @@ class HomePage extends StatelessWidget {
                     );
                   },
                   child: const Text('Ver cursos'),
+                ),
+
+                const SizedBox(height: 20),
+
+                // NEW: botón para ver recompensas / puntos
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.star),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RewardsPage()),
+                    );
+                  },
+                  label: const Text('Ver mis recompensas'),
                 ),
 
                 const SizedBox(height: 20),

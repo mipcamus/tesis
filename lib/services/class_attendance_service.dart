@@ -18,9 +18,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/class_attendance.dart';
+import 'reward_service.dart'; // NEW
 
 class ClassAttendanceService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final RewardService _rewardService = RewardService(); // NEW
 
   CollectionReference<Map<String, dynamic>> get _attendanceCollection {
     return _firestore.collection('class_attendance');
@@ -33,21 +35,48 @@ class ClassAttendanceService {
     required String student_id,
   }) async {
     final doc_id = '${class_id}_$student_id';
+    final ref = _attendanceCollection.doc(doc_id);
 
-    final attendance = ClassAttendance(
-      id: doc_id,
-      course_id: course_id,
-      class_id: class_id,
-      student_id: student_id,
-      present: true,
-      createdAt: DateTime.now(),
-    );
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(ref);
 
-    await _attendanceCollection.doc(doc_id).set(attendance.toMap());
+      final now = DateTime.now();
+
+      if (!snapshot.exists) {
+        // PRIMERA VEZ MARCANDO ASISTENCIA → crear registro y sumar puntos
+        final attendance = ClassAttendance(
+          id: doc_id,
+          course_id: course_id,
+          class_id: class_id,
+          student_id: student_id,
+          present: true,
+          createdAt: now,
+        );
+
+        transaction.set(ref, attendance.toMap());
+
+        await _rewardService.add_points_to_current_user(10); // NEW
+      } else {
+        final data = snapshot.data() as Map<String, dynamic>;
+        final wasPresent = data['present'] == true;
+
+        if (!wasPresent) {
+          // Estaba ausente → pasa a presente → sumar puntos
+          transaction.update(ref, {
+            'present': true,
+            'updatedAt': now.toIso8601String(),
+          });
+
+          await _rewardService.add_points_to_current_user(10); // NEW
+        } else {
+          // Ya estaba presente → NO sumar puntos extra
+          transaction.update(ref, {'updatedAt': now.toIso8601String()});
+        }
+      }
+    });
   }
 
-  /// sistencias de un alumno en un curso.
-  /// saber en qué clases ya marcó asistencia.
+  /// Asistencias de un alumno en un curso.
   Stream<List<ClassAttendance>> listenAttendanceForStudentInCourse({
     required String course_id,
     required String student_id,
