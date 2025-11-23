@@ -108,6 +108,31 @@ class _CourseClassesPageState extends State<CourseClassesPage> {
     }
   }
 
+  // NEW: marcar clase como realizada y mostrar modal con QR
+  Future<void> _markClassAsDone(CourseClass courseClass) async {
+    try {
+      // Actualizamos el atributo done en Firestore
+      await FirebaseFirestore.instance
+          .collection('course_classes')
+          .doc(courseClass.id)
+          .update({'done': true});
+
+      if (!mounted) return;
+
+      // Modal con QR
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => _ClassQrDialog(courseClass: courseClass),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al marcar clase como realizada: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // aunque tarde un poquito en cargar el rol, igual podemos mostrar la lista
@@ -147,13 +172,28 @@ class _CourseClassesPageState extends State<CourseClassesPage> {
                   '${courseClass.date.hour.toString().padLeft(2, '0')}:'
                   '${courseClass.date.minute.toString().padLeft(2, '0')}';
 
+              final statusIcon = Icon(
+                courseClass.done ? Icons.check_circle : Icons.schedule,
+                color: courseClass.done ? Colors.green : Colors.grey,
+              );
+
               return ListTile(
                 title: Text('Clase ${index + 1}'),
                 subtitle: Text(formattedDate),
-                trailing: Icon(
-                  courseClass.done ? Icons.check_circle : Icons.schedule,
-                  color: courseClass.done ? Colors.green : Colors.grey,
-                ),
+                trailing: _isTeacher
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          statusIcon,
+                          const SizedBox(width: 8),
+                          if (!courseClass.done)
+                            TextButton(
+                              onPressed: () => _markClassAsDone(courseClass),
+                              child: const Text('Marcar como realizada'),
+                            ),
+                        ],
+                      )
+                    : statusIcon,
                 // aquí más adelante puedes abrir asistencia, etc.
               );
             },
@@ -168,6 +208,70 @@ class _CourseClassesPageState extends State<CourseClassesPage> {
               child: const Icon(Icons.add),
             )
           : null,
+    );
+  }
+}
+
+// NEW: Widget de la modal con QR (placeholder con ícono)
+class _ClassQrDialog extends StatelessWidget {
+  final CourseClass courseClass;
+
+  const _ClassQrDialog({required this.courseClass});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Clase marcada como realizada',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Pide a tus alumnos que escaneen este código QR para registrar su asistencia.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            const SizedBox(height: 24),
+            // Placeholder del QR
+            Container(
+              width: 220,
+              height: 220,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: Colors.grey.shade200,
+                border: Border.all(color: Colors.grey.shade400),
+              ),
+              child: const Center(
+                child: Icon(Icons.qr_code_2, size: 130, color: Colors.black87),
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  'Cerrar',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
