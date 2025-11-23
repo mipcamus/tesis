@@ -86,7 +86,7 @@ class CoursesPage extends StatelessWidget {
                 );
               }
 
-              // ⬇️ Aquí metemos la caluga global arriba y la lista de cursos abajo
+              // global arriba y la lista de cursos
               return Column(
                 children: [
                   const TotalAttendanceSummary(),

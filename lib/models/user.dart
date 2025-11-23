@@ -5,6 +5,7 @@ class UserModel {
   final String last_name;
   final String rut;
   final String mail;
+  final String? photo_url;
 
   UserModel({
     required this.id,
@@ -13,6 +14,7 @@ class UserModel {
     required this.rut,
     required this.mail,
     required this.role,
+    this.photo_url,
   });
 
   factory UserModel.fromFirestore(String id, Map<String, dynamic> data) {
@@ -23,6 +25,7 @@ class UserModel {
       rut: data['rut'] ?? '',
       mail: data['mail'] ?? '',
       role: data['role'] ?? 'student',
+      photo_url: data['photo_url'],
     );
   }
 }

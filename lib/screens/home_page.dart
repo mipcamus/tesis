@@ -20,6 +20,10 @@ import 'create_course_page.dart';
 import 'teacher_courses_page.dart';
 import 'rewards_page.dart';
 
+import '../models/user.dart';
+import '../widgets/profile_header.dart';
+import 'edit_profile_page.dart';
+
 class HomePage extends StatelessWidget {
   final String email;
 
@@ -67,89 +71,119 @@ class HomePage extends StatelessWidget {
 
           final data = snapshot.data!.data();
           final role = data?['role'] ?? 'student'; // valor por defecto
-
           final isTeacher = role == 'teacher';
 
+          // Creamos el modelo de usuario a partir de Firestore
+          final user = UserModel(
+            id: uid,
+            name: data?['name'] ?? '',
+            last_name: data?['last_name'] ?? '',
+            rut: data?['rut'] ?? '',
+            mail: data?['mail'] ?? email,
+            role: role,
+          );
+
           return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Bienvenido, $email'),
-                const SizedBox(height: 20),
-
-                // Botón para ver cursos donde está inscrito (usa course_students vía UserCoursesService)
-                if (!isTeacher)
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const CoursesPage()),
-                      );
-                    },
-                    child: const Text('Ver cursos'),
-                  ),
-
-                if (!isTeacher) const SizedBox(height: 20),
-
-                // botón para ver recompensas / puntos
-                if (!isTeacher)
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.star),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const RewardsPage()),
-                      );
-                    },
-                    label: const Text('Ver mis recompensas'),
-                  ),
-
-                const SizedBox(height: 20),
-
-                // Ver mis cursos (como profesor, usa teacher_id en courses)
-                if (isTeacher)
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.menu_book),
-                    onPressed: () {
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Header de perfil (avatar, nombre, rut, botón)
+                  ProfileHeader(
+                    user: user,
+                    onEditProfile: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const TeacherCoursesPage(),
+                          builder: (_) => EditProfilePage(user: user),
                         ),
                       );
                     },
-                    label: const Text('Ver mis cursos (profesor)'),
                   ),
 
-                const SizedBox(height: 10),
+                  const SizedBox(height: 8),
 
-                // profesor: botón para crear usuario
-                if (isTeacher)
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.person_add),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CreateUserPage(),
-                        ),
-                      );
-                    },
-                    label: const Text('Crear usuario'),
-                  ),
+                  // Texto original de bienvenida (no se elimina)
+                  Text('Bienvenido, $email'),
+                  const SizedBox(height: 20),
 
-                const SizedBox(height: 10),
+                  // Botón para ver cursos donde está inscrito (usa course_students vía UserCoursesService)
+                  if (!isTeacher)
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const CoursesPage(),
+                          ),
+                        );
+                      },
+                      child: const Text('Ver cursos'),
+                    ),
 
-                // profesor: botón para crear curso
-                if (isTeacher)
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const CreateCoursePage(),
-                        ),
-                      );
-                    },
-                    label: const Text('Crear curso'),
-                  ),
-              ],
+                  if (!isTeacher) const SizedBox(height: 20),
+
+                  // botón para ver recompensas / puntos
+                  if (!isTeacher)
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.star),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const RewardsPage(),
+                          ),
+                        );
+                      },
+                      label: const Text('Ver mis recompensas'),
+                    ),
+
+                  const SizedBox(height: 20),
+
+                  // Ver mis cursos (como profesor, usa teacher_id en courses)
+                  if (isTeacher)
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.menu_book),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const TeacherCoursesPage(),
+                          ),
+                        );
+                      },
+                      label: const Text('Ver mis cursos (profesor)'),
+                    ),
+
+                  const SizedBox(height: 10),
+
+                  // profesor: botón para crear usuario
+                  if (isTeacher)
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.person_add),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const CreateUserPage(),
+                          ),
+                        );
+                      },
+                      label: const Text('Crear usuario'),
+                    ),
+
+                  const SizedBox(height: 10),
+
+                  // profesor: botón para crear curso
+                  if (isTeacher)
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.add),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const CreateCoursePage(),
+                          ),
+                        );
+                      },
+                      label: const Text('Crear curso'),
+                    ),
+                ],
+              ),
             ),
           );
         },
