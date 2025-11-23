@@ -7,12 +7,15 @@
 // Esta vista se usa para:
 // - Mostrar un formulario para ingresar la información del nuevo usuario.
 // - Validar campos como correo institucional y nombre.
-// - Crear el usuario a través del servicio correspondiente (UserService).
+// - Crear el usuario en Firebase Auth y su doc en Firestore.
+// - Intentar volver a dejar logueado al profesor usando AuthSession.
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../services/auth_session_service.dart';
 
 class CreateUserPage extends StatefulWidget {
   const CreateUserPage({super.key});
@@ -40,7 +43,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
     setState(() => _isLoading = true);
 
     try {
-      // 1. Crear usuario en Firebase Auth
+      // 1. Crear usuario en Firebase Auth (cambia la sesión al usuario nuevo)
       UserCredential credential = await FirebaseAuth.instance
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
@@ -58,6 +61,23 @@ class _CreateUserPageState extends State<CreateUserPage> {
         'role': _selectedRole,
       });
 
+      // 3. Intentar re-loguear al profesor usando AuthSession
+      final teacherEmail = AuthSession.teacherEmail;
+      final teacherPassword = AuthSession.teacherPassword;
+
+      if (teacherEmail != null && teacherPassword != null) {
+        // Solo si tenemos credenciales guardadas hacemos el cambio de sesión
+        await FirebaseAuth.instance.signOut();
+
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: teacherEmail,
+          password: teacherPassword,
+        );
+      } else {
+        // MVP: si no tenemos credenciales, no forzamos signOut
+        // → la sesión se queda con el usuario recién creado (comportamiento anterior)
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario creado correctamente')),
@@ -69,7 +89,9 @@ class _CreateUserPageState extends State<CreateUserPage> {
         context,
       ).showSnackBar(SnackBar(content: Text('Error: ${e.message}')));
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -77,13 +99,10 @@ class _CreateUserPageState extends State<CreateUserPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Crear usuario')),
-
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-
         child: Form(
           key: _formKey,
-
           child: ListView(
             children: [
               TextFormField(
@@ -92,20 +111,17 @@ class _CreateUserPageState extends State<CreateUserPage> {
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Ingrese un nombre' : null,
               ),
-
               TextFormField(
                 controller: _lastNameController,
                 decoration: const InputDecoration(labelText: 'Apellido'),
                 validator: (v) =>
                     v == null || v.isEmpty ? 'Ingrese apellido' : null,
               ),
-
               TextFormField(
                 controller: _rutController,
                 decoration: const InputDecoration(labelText: 'RUT'),
                 validator: (v) => v == null || v.isEmpty ? 'Ingrese rut' : null,
               ),
-
               TextFormField(
                 controller: _emailController,
                 decoration: const InputDecoration(labelText: 'Correo'),
@@ -113,7 +129,6 @@ class _CreateUserPageState extends State<CreateUserPage> {
                 validator: (v) =>
                     v == null || !v.contains('@') ? 'Correo inválido' : null,
               ),
-
               TextFormField(
                 controller: _passwordController,
                 decoration: const InputDecoration(labelText: 'Contraseña'),
@@ -121,10 +136,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
                 validator: (v) =>
                     v == null || v.length < 6 ? 'Mínimo 6 caracteres' : null,
               ),
-
               const SizedBox(height: 20),
-
-              // Selección de rol
               DropdownButtonFormField<String>(
                 value: _selectedRole,
                 decoration: const InputDecoration(labelText: 'Rol'),
@@ -136,10 +148,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
                   setState(() => _selectedRole = value!);
                 },
               ),
-
               const SizedBox(height: 30),
-
-              // Botón para crear usuario
               _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : ElevatedButton.icon(

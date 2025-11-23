@@ -9,14 +9,14 @@
 // - Mostrar el formulario de login.
 // - Validar correo y contraseña antes de enviar.
 // - Autenticar al usuario utilizando FirebaseAuth.
-// - Redirigir a HomePage si el login es exitoso.
+// - Redirigir a HomePage si el login es exitoso (manejado por el Stream de auth).
 // -----------------------------------------------------------------------------
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-// 🔹 NEW: importamos el UserService para crear el doc en Firestore
 import '../services/user_service.dart';
+import '../services/auth_session_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -30,16 +30,23 @@ class _LoginPageState extends State<LoginPage> {
   final pass = TextEditingController();
   String? error;
 
-  // 🔹 NEW: instancia de UserService
   final UserService _userService = UserService();
 
   Future<void> signIn() async {
     setState(() => error = null);
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: email.text.trim(),
         password: pass.text.trim(),
       );
+
+      // ✅ MVP simple: si el login fue correcto, guardamos SIEMPRE
+      // las credenciales en memoria. Asumimos que solo los profesores
+      // verán la pantalla de crear usuario.
+      AuthSession.teacherEmail = email.text.trim();
+      AuthSession.teacherPassword = pass.text.trim();
+
+      // La navegación a Home la manejas con tu Stream de auth en main.dart
     } on FirebaseAuthException catch (e) {
       setState(() => error = e.message);
     }
@@ -48,7 +55,6 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> signUp() async {
     setState(() => error = null);
     try {
-      // 1) Crear usuario en Firebase Auth
       final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: pass.text.trim(),
@@ -56,11 +62,9 @@ class _LoginPageState extends State<LoginPage> {
 
       final uid = cred.user!.uid;
 
-      // 2) Crear documento en Firestore (colección `users`)
       await _userService.createUserDocument(
         uid: uid,
-        name:
-            '', // por ahora vacío, luego puedes tener un campo nombre en el formulario
+        name: '',
         last_name: '',
         rut: '',
         mail: email.text.trim(),
