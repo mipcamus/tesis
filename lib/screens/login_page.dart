@@ -40,7 +40,6 @@ class _LoginPageState extends State<LoginPage> {
         password: pass.text.trim(),
       );
 
-      // ✅ MVP simple: si el login fue correcto, guardamos SIEMPRE
       // las credenciales en memoria. Asumimos que solo los profesores
       // verán la pantalla de crear usuario.
       AuthSession.teacherEmail = email.text.trim();

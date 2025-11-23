@@ -218,8 +218,8 @@ class AttendanceStatsService {
   Stream<double> listen_total_attendance_percentage_for_current_student() {
     final student_id = _uid;
 
-    // Cada vez que cambie la colección de asistencias de este alumno,
-    // recalculamos el porcentaje total usando la lógica que ya tienes.
+    // Cada vez que cambie la colección de asistencias de este alumno
+    // recalculamos el porcentaje total
     return _attendance_collection
         .where('student_id', isEqualTo: student_id)
         .snapshots()

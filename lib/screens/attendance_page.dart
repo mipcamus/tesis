@@ -50,13 +50,13 @@ class _AttendancePageState extends State<AttendancePage> {
     });
   }
 
-  // NEW: modal de recompensa por asistencia
+  // Modal de recompensa por asistencia (+10 puntos)
   Future<void> _showAttendanceRewardDialog() async {
     if (!mounted) return;
 
     await showDialog<void>(
       context: context,
-      barrierDismissible: false, // se cierra solo con el botón
+      barrierDismissible: false,
       builder: (context) {
         return Dialog(
           shape: RoundedRectangleBorder(
@@ -67,7 +67,6 @@ class _AttendancePageState extends State<AttendancePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Icono de check
                 Container(
                   width: 64,
                   height: 64,
@@ -83,13 +82,13 @@ class _AttendancePageState extends State<AttendancePage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  '¡Asistencia Registrada!',
+                  'Asistencia registrada',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Has ganado +10 puntos. ¡Sigue así!',
+                  'Has ganado +10 puntos. Sigue así.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.black54),
                 ),
@@ -125,6 +124,80 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
+  // Modal de recompensa por racha de 3 clases seguidas (+20 puntos)
+  Future<void> _showStreakBonusDialog() async {
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.blue.withOpacity(0.12),
+                  ),
+                  child: const Icon(
+                    Icons.local_fire_department,
+                    size: 40,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Racha de asistencia',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Has asistido a 3 clases seguidas.\nHas ganado +20 puntos extra.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text(
+                      'Aceptar',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _markAttendance(CourseClass courseClass) async {
     if (_student_id == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -134,7 +207,7 @@ class _AttendancePageState extends State<AttendancePage> {
     }
 
     try {
-      await _attendanceService.markAttendance(
+      final gotBonus = await _attendanceService.markAttendance(
         course_id: courseClass.course_id,
         class_id: courseClass.id,
         student_id: _student_id!,
@@ -142,13 +215,15 @@ class _AttendancePageState extends State<AttendancePage> {
 
       if (!mounted) return;
 
-      // SnackBar existente (lo dejamos, pero podrías quitarlo si quieres solo el modal)
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Asistencia registrada')));
 
-      // NEW: mostrar modal de recompensa
       await _showAttendanceRewardDialog();
+
+      if (gotBonus) {
+        await _showStreakBonusDialog();
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -184,10 +259,7 @@ class _AttendancePageState extends State<AttendancePage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Todas las clases de ese curso
           final allClasses = classesSnapshot.data!;
-
-          // Solo clases con done == true
           final doneClasses = allClasses.where((c) => c.done == true).toList();
 
           if (doneClasses.isEmpty) {
@@ -224,7 +296,6 @@ class _AttendancePageState extends State<AttendancePage> {
                 itemBuilder: (context, index) {
                   final courseClass = doneClasses[index];
 
-                  // ¿Este alumno ya marcó asistencia en esta clase?
                   final alreadyMarked = attendanceList.any(
                     (att) =>
                         att.class_id == courseClass.id && att.present == true,
