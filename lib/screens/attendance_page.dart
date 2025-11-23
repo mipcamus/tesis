@@ -147,7 +147,7 @@ class _AttendancePageState extends State<AttendancePage> {
 
                   // ¿Este alumno ya marcó asistencia en esta clase?
                   final alreadyMarked = attendanceList.any(
-                    (att) => att.class_id == courseClass.id,
+                    (att) => att.class_id == courseClass.id && att.present,
                   );
 
                   final date = courseClass.date;
