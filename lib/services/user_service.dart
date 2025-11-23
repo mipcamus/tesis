@@ -28,4 +28,25 @@ class UserService {
     if (!snap.exists) return null;
     return UserModel.fromFirestore(snap.id, snap.data()!);
   }
+
+  /// Crea (o actualiza) el documento del usuario en la colección `users`.
+  Future<void> createUserDocument({
+    required String uid,
+    required String name,
+    required String last_name,
+    required String rut,
+    required String mail,
+    String role = 'student', // por defecto alumno
+  }) async {
+    await _db.collection('users').doc(uid).set(
+      {
+        'name': name,
+        'last_name': last_name,
+        'rut': rut,
+        'mail': mail,
+        'role': role,
+      },
+      SetOptions(merge: true), // por si ya existía algo, no lo revienta
+    );
+  }
 }

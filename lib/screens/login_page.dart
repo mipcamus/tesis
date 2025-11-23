@@ -15,6 +15,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+// 🔹 NEW: importamos el UserService para crear el doc en Firestore
+import '../services/user_service.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -26,6 +29,9 @@ class _LoginPageState extends State<LoginPage> {
   final email = TextEditingController();
   final pass = TextEditingController();
   String? error;
+
+  // 🔹 NEW: instancia de UserService
+  final UserService _userService = UserService();
 
   Future<void> signIn() async {
     setState(() => error = null);
@@ -42,9 +48,23 @@ class _LoginPageState extends State<LoginPage> {
   Future<void> signUp() async {
     setState(() => error = null);
     try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      // 1) Crear usuario en Firebase Auth
+      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: pass.text.trim(),
+      );
+
+      final uid = cred.user!.uid;
+
+      // 2) Crear documento en Firestore (colección `users`)
+      await _userService.createUserDocument(
+        uid: uid,
+        name:
+            '', // por ahora vacío, luego puedes tener un campo nombre en el formulario
+        last_name: '',
+        rut: '',
+        mail: email.text.trim(),
+        role: 'student', // por defecto alumno
       );
     } on FirebaseAuthException catch (e) {
       setState(() => error = e.message);

@@ -41,48 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDM1WtkW2aAKuvQeRxI9zGIo4BcqHxeprs',
-    appId: '1:878063591100:web:315be7de3024299ccc3ab9',
-    messagingSenderId: '878063591100',
-    projectId: 'tesis-prod',
-    authDomain: 'tesis-prod.firebaseapp.com',
-    storageBucket: 'tesis-prod.firebasestorage.app',
-    measurementId: 'G-0J02P94JHR',
+    apiKey: 'AIzaSyCDqPYnVgZriI7n8P3zIQQSjXHKsNBf1Cg',
+    appId: '1:431259803667:web:d2207f08eb7220f67fdfe6',
+    messagingSenderId: '431259803667',
+    projectId: 'presenteapp-97f7f',
+    authDomain: 'presenteapp-97f7f.firebaseapp.com',
+    storageBucket: 'presenteapp-97f7f.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDP1Xuji2K_QkGyEtILPEI6HWjOMoOTIJ4',
-    appId: '1:878063591100:android:6ad221429f84fb91cc3ab9',
-    messagingSenderId: '878063591100',
-    projectId: 'tesis-prod',
-    storageBucket: 'tesis-prod.firebasestorage.app',
+    apiKey: 'AIzaSyCp8UCcovMpruGR3W4Tt4nvsvqG0AdUxes',
+    appId: '1:431259803667:android:cdff39c796f643b77fdfe6',
+    messagingSenderId: '431259803667',
+    projectId: 'presenteapp-97f7f',
+    storageBucket: 'presenteapp-97f7f.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAxO2cyUahRksrkGn1e-qJ41MR2emOrSoU',
-    appId: '1:878063591100:ios:21ed7535f1dfcbbbcc3ab9',
-    messagingSenderId: '878063591100',
-    projectId: 'tesis-prod',
-    storageBucket: 'tesis-prod.firebasestorage.app',
+    apiKey: 'AIzaSyC0MJIJcVlbJU8wG6-p_g0gqcVBpp3JGRM',
+    appId: '1:431259803667:ios:f6fa5955745d8cda7fdfe6',
+    messagingSenderId: '431259803667',
+    projectId: 'presenteapp-97f7f',
+    storageBucket: 'presenteapp-97f7f.firebasestorage.app',
     iosBundleId: 'com.example.tesis',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAxO2cyUahRksrkGn1e-qJ41MR2emOrSoU',
-    appId: '1:878063591100:ios:21ed7535f1dfcbbbcc3ab9',
-    messagingSenderId: '878063591100',
-    projectId: 'tesis-prod',
-    storageBucket: 'tesis-prod.firebasestorage.app',
+    apiKey: 'AIzaSyC0MJIJcVlbJU8wG6-p_g0gqcVBpp3JGRM',
+    appId: '1:431259803667:ios:f6fa5955745d8cda7fdfe6',
+    messagingSenderId: '431259803667',
+    projectId: 'presenteapp-97f7f',
+    storageBucket: 'presenteapp-97f7f.firebasestorage.app',
     iosBundleId: 'com.example.tesis',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDM1WtkW2aAKuvQeRxI9zGIo4BcqHxeprs',
-    appId: '1:878063591100:web:51292c43ab2035d8cc3ab9',
-    messagingSenderId: '878063591100',
-    projectId: 'tesis-prod',
-    authDomain: 'tesis-prod.firebaseapp.com',
-    storageBucket: 'tesis-prod.firebasestorage.app',
-    measurementId: 'G-LRJHJ0FXT7',
+    apiKey: 'AIzaSyCDqPYnVgZriI7n8P3zIQQSjXHKsNBf1Cg',
+    appId: '1:431259803667:web:013147eba8023ce57fdfe6',
+    messagingSenderId: '431259803667',
+    projectId: 'presenteapp-97f7f',
+    authDomain: 'presenteapp-97f7f.firebaseapp.com',
+    storageBucket: 'presenteapp-97f7f.firebasestorage.app',
   );
+
 }
