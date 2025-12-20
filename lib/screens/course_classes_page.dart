@@ -1,19 +1,10 @@
-// -----------------------------------------------------------------------------
-// Vista: CourseClassesPage
-// -----------------------------------------------------------------------------
-// Muestra todas las clases programadas de un curso seleccionado. Esta pantalla
-// permite al usuario ver la lista de CourseClass asociadas a un curso
-//
-// Esta vista se usa para:
-// - Listar las clases del curso (CourseClass).
-// - Mostrar fecha, estado (realizada / pendiente).
-// - Navegar a páginas donde se gestiona o visualiza la asistencia.
-// - Permitir marcar clases como realizadas, según permisos.
-// -----------------------------------------------------------------------------
+import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../models/course_class.dart';
 import '../services/course_classes_service.dart';
@@ -48,105 +39,120 @@ class _CourseClassesPageState extends State<CourseClassesPage> {
       return;
     }
 
-    final uid = currentUser.uid;
     final snap = await FirebaseFirestore.instance
         .collection('users')
-        .doc(uid)
+        .doc(currentUser.uid)
         .get();
 
-    final data = snap.data();
-    final role = data?['role'] ?? 'student';
-
     setState(() {
-      _isTeacher = role == 'teacher';
+      _isTeacher = snap.data()?['role'] == 'teacher';
       _loadingRole = false;
     });
   }
 
-  Future<void> _createClass() async {
-    // Elegir fecha
-    final pickedDate = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now().add(const Duration(days: 1)),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
+  String _generateQrToken() {
+    final random = Random.secure();
+    return List.generate(
+      32,
+      (_) => random.nextInt(36).toRadixString(36),
+    ).join();
+  }
 
-    if (pickedDate == null) return;
-
-    // Elegir hora (opcional, pero útil)
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: const TimeOfDay(hour: 8, minute: 0),
-    );
-
-    if (pickedTime == null) return;
-
-    final dateTime = DateTime(
-      pickedDate.year,
-      pickedDate.month,
-      pickedDate.day,
-      pickedTime.hour,
-      pickedTime.minute,
-    );
-
+  Future<void> _markClassAsDone(CourseClass courseClass) async {
     try {
-      await _classService.createClass(
-        course_id: widget.course_id,
-        date: dateTime,
-      );
+      final token = _generateQrToken();
+
+      await FirebaseFirestore.instance
+          .collection('course_classes')
+          .doc(courseClass.id)
+          .update({
+            'done': true,
+            'qr_token': token,
+            'qr_issuedAt': FieldValue.serverTimestamp(),
+            'qr_validMinutes': 30,
+          });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Clase creada correctamente')),
+
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => _ClassQrDialog(classId: courseClass.id, qrToken: token),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error al crear clase: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
-  // NEW: marcar clase como realizada y mostrar modal con QR
-  Future<void> _markClassAsDone(CourseClass courseClass) async {
+  /// ✅ Crear una clase (rápido) en Firestore
+  Future<void> _createNewClass() async {
     try {
-      // Actualizamos el atributo done en Firestore
-      await FirebaseFirestore.instance
-          .collection('course_classes')
-          .doc(courseClass.id)
-          .update({'done': true});
+      // 1) Elegir fecha/hora de la clase
+      final now = DateTime.now();
+      final pickedDate = await showDatePicker(
+        context: context,
+        initialDate: now,
+        firstDate: DateTime(now.year - 1),
+        lastDate: DateTime(now.year + 2),
+      );
+      if (pickedDate == null) return;
+
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(now),
+      );
+      if (pickedTime == null) return;
+
+      final classDateTime = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime.hour,
+        pickedTime.minute,
+      );
+
+      // 2) Guardar en Firestore
+      await FirebaseFirestore.instance.collection('course_classes').add({
+        'course_id': widget.course_id,
+        'date': Timestamp.fromDate(classDateTime),
+        'done': false,
+      });
 
       if (!mounted) return;
-
-      // Modal con QR
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => _ClassQrDialog(courseClass: courseClass),
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Clase creada correctamente')),
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al marcar clase como realizada: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('❌ Error creando clase: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // aunque tarde un poquito en cargar el rol, igual podemos mostrar la lista
+    if (_loadingRole) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Clases del curso')),
+
+      // ✅ AQUÍ vuelve el botón "+"
+      floatingActionButton: _isTeacher
+          ? FloatingActionButton(
+              onPressed: _createNewClass,
+              child: const Icon(Icons.add),
+            )
+          : null,
+
       body: StreamBuilder<List<CourseClass>>(
         stream: _classService.listenClassesByCourse(widget.course_id),
         builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error al cargar clases: ${snapshot.error}'),
-            );
-          }
-
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -154,120 +160,73 @@ class _CourseClassesPageState extends State<CourseClassesPage> {
           final classes = snapshot.data!;
 
           if (classes.isEmpty) {
-            return const Center(
-              child: Text('Aún no hay clases creadas para este curso.'),
-            );
+            return const Center(child: Text('No hay clases aún.'));
           }
 
           return ListView.separated(
             itemCount: classes.length,
             separatorBuilder: (_, __) => const Divider(height: 1),
             itemBuilder: (context, index) {
-              final courseClass = classes[index];
-
-              final formattedDate =
-                  '${courseClass.date.day.toString().padLeft(2, '0')}/'
-                  '${courseClass.date.month.toString().padLeft(2, '0')}/'
-                  '${courseClass.date.year} '
-                  '${courseClass.date.hour.toString().padLeft(2, '0')}:'
-                  '${courseClass.date.minute.toString().padLeft(2, '0')}';
-
-              final statusIcon = Icon(
-                courseClass.done ? Icons.check_circle : Icons.schedule,
-                color: courseClass.done ? Colors.green : Colors.grey,
-              );
-
+              final c = classes[index];
               return ListTile(
                 title: Text('Clase ${index + 1}'),
-                subtitle: Text(formattedDate),
+                subtitle: Text(c.date.toString()),
                 trailing: _isTeacher
-                    ? Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          statusIcon,
-                          const SizedBox(width: 8),
-                          if (!courseClass.done)
-                            TextButton(
-                              onPressed: () => _markClassAsDone(courseClass),
+                    ? (c.done
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : TextButton(
+                              onPressed: () => _markClassAsDone(c),
                               child: const Text('Marcar como realizada'),
-                            ),
-                        ],
-                      )
-                    : statusIcon,
-                // aquí más adelante puedes abrir asistencia, etc.
+                            ))
+                    : Icon(
+                        Icons.check_circle,
+                        color: c.done ? Colors.green : Colors.grey,
+                      ),
               );
             },
           );
         },
       ),
-
-      // FAB solo para profesores
-      floatingActionButton: _isTeacher
-          ? FloatingActionButton(
-              onPressed: _createClass,
-              child: const Icon(Icons.add),
-            )
-          : null,
     );
   }
 }
 
-// NEW: Widget de la modal con QR (placeholder con ícono)
 class _ClassQrDialog extends StatelessWidget {
-  final CourseClass courseClass;
+  final String classId;
+  final String qrToken;
 
-  const _ClassQrDialog({required this.courseClass});
+  const _ClassQrDialog({required this.classId, required this.qrToken});
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Payload real en JSON (esto sí lo podrás leer al escanear)
+    final qrPayload = jsonEncode({'class_id': classId, 'token': qrToken});
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Clase marcada como realizada',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             const Text(
-              'Pide a tus alumnos que escaneen este código QR para registrar su asistencia.',
+              'Los estudiantes deben escanear este QR para registrar su asistencia.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             const SizedBox(height: 24),
-            // Placeholder del QR
-            Container(
-              width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                color: Colors.grey.shade200,
-                border: Border.all(color: Colors.grey.shade400),
-              ),
-              child: const Center(
-                child: Icon(Icons.qr_code_2, size: 130, color: Colors.black87),
-              ),
-            ),
+
+            // ✅ QR real (JSON)
+            QrImageView(data: qrPayload, size: 230),
+
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: const Text(
-                  'Cerrar',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
             ),
           ],
         ),

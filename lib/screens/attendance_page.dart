@@ -1,15 +1,6 @@
 // -----------------------------------------------------------------------------
 // Vista: AttendancePage
 // -----------------------------------------------------------------------------
-// Pantalla encargada de mostrar la asistencia de un alumno en un curso
-// Aquí se listan las clases del curso junto con su estado (si fue o no fue).
-//
-// Esta vista se usa para:
-// - Consultar todas las clases del curso (CourseClass).
-// - Obtener la asistencia del alumno desde ClassAttendance.
-// - Mostrar visualmente si el alumno asistió o no a cada clase.
-// - Permitir marcar asistencia.
-// -----------------------------------------------------------------------------
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -19,6 +10,7 @@ import '../models/course_class.dart';
 import '../models/class_attendance.dart';
 import '../services/course_classes_service.dart';
 import '../services/class_attendance_service.dart';
+import 'qr_scan_page.dart'; // ✅ NUEVO
 
 class AttendancePage extends StatefulWidget {
   final String course_id;
@@ -36,6 +28,8 @@ class _AttendancePageState extends State<AttendancePage> {
   String? _student_id;
   bool _loadingUser = true;
 
+  bool _isMarkingAttendance = false;
+
   @override
   void initState() {
     super.initState();
@@ -50,7 +44,9 @@ class _AttendancePageState extends State<AttendancePage> {
     });
   }
 
-  // Modal de recompensa por asistencia (+10 puntos)
+  // ---------------------------------------------------------------------------
+  // Diálogos (SIN CAMBIOS)
+  // ---------------------------------------------------------------------------
   Future<void> _showAttendanceRewardDialog() async {
     if (!mounted) return;
 
@@ -96,9 +92,7 @@ class _AttendancePageState extends State<AttendancePage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                    onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       shape: RoundedRectangleBorder(
@@ -124,7 +118,6 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  // Modal de recompensa por racha de 3 clases seguidas (+20 puntos)
   Future<void> _showStreakBonusDialog() async {
     if (!mounted) return;
 
@@ -170,9 +163,7 @@ class _AttendancePageState extends State<AttendancePage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                    onPressed: () => Navigator.of(context).pop(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
@@ -198,29 +189,30 @@ class _AttendancePageState extends State<AttendancePage> {
     );
   }
 
-  Future<void> _markAttendance(CourseClass courseClass) async {
-    if (_student_id == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No hay usuario autenticado')),
-      );
-      return;
-    }
+  // ---------------------------------------------------------------------------
+  // ✅ NUEVO: marcar asistencia escaneando QR
+  // ---------------------------------------------------------------------------
+  Future<void> _markAttendanceByQr() async {
+    if (_student_id == null || _isMarkingAttendance) return;
+
+    final scanned = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const QrScanPage()),
+    );
+
+    if (scanned == null) return;
+
+    setState(() => _isMarkingAttendance = true);
 
     try {
-      final gotBonus = await _attendanceService.markAttendance(
-        course_id: courseClass.course_id,
-        class_id: courseClass.id,
+      final gotBonus = await _attendanceService.markAttendanceByQr(
+        qrData: scanned,
         student_id: _student_id!,
       );
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Asistencia registrada')));
-
       await _showAttendanceRewardDialog();
-
       if (gotBonus) {
         await _showStreakBonusDialog();
       }
@@ -228,7 +220,11 @@ class _AttendancePageState extends State<AttendancePage> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Error al marcar asistencia: $e')));
+      ).showSnackBar(SnackBar(content: Text('Error QR: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _isMarkingAttendance = false);
+      }
     }
   }
 
@@ -246,91 +242,99 @@ class _AttendancePageState extends State<AttendancePage> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Asistencias')),
-      body: StreamBuilder<List<CourseClass>>(
-        stream: _classService.listenClassesByCourse(widget.course_id),
-        builder: (context, classesSnapshot) {
-          if (classesSnapshot.hasError) {
-            return Center(
-              child: Text('Error al cargar clases: ${classesSnapshot.error}'),
-            );
-          }
-
-          if (!classesSnapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final allClasses = classesSnapshot.data!;
-          final doneClasses = allClasses.where((c) => c.done == true).toList();
-
-          if (doneClasses.isEmpty) {
-            return const Center(
-              child: Text(
-                'Aún no hay clases disponibles para marcar asistencia.',
+      body: Column(
+        children: [
+          // ✅ BOTÓN QR
+          Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.qr_code_scanner),
+                label: const Text('Escanear QR'),
+                onPressed: _isMarkingAttendance ? null : _markAttendanceByQr,
               ),
-            );
-          }
-
-          return StreamBuilder<List<ClassAttendance>>(
-            stream: _attendanceService.listenAttendanceForStudentInCourse(
-              course_id: widget.course_id,
-              student_id: _student_id!,
             ),
-            builder: (context, attendanceSnapshot) {
-              if (attendanceSnapshot.hasError) {
-                return Center(
-                  child: Text(
-                    'Error al cargar asistencias: ${attendanceSnapshot.error}',
+          ),
+
+          // ---------------- LISTADO ----------------
+          Expanded(
+            child: StreamBuilder<List<CourseClass>>(
+              stream: _classService.listenClassesByCourse(widget.course_id),
+              builder: (context, classesSnapshot) {
+                if (!classesSnapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final doneClasses = classesSnapshot.data!
+                    .where((c) => c.done)
+                    .toList();
+
+                if (doneClasses.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Aún no hay clases disponibles para marcar asistencia.',
+                    ),
+                  );
+                }
+
+                return StreamBuilder<List<ClassAttendance>>(
+                  stream: _attendanceService.listenAttendanceForStudentInCourse(
+                    course_id: widget.course_id,
+                    student_id: _student_id!,
                   ),
+                  builder: (context, attendanceSnapshot) {
+                    if (!attendanceSnapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final attendanceList = attendanceSnapshot.data!;
+
+                    return ListView.separated(
+                      itemCount: doneClasses.length,
+                      separatorBuilder: (_, __) => const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final courseClass = doneClasses[index];
+
+                        final alreadyMarked = attendanceList.any(
+                          (att) =>
+                              att.class_id == courseClass.id &&
+                              att.present == true,
+                        );
+
+                        final date = courseClass.date;
+                        final formattedDate =
+                            '${date.day.toString().padLeft(2, '0')}/'
+                            '${date.month.toString().padLeft(2, '0')}/'
+                            '${date.year} '
+                            '${date.hour.toString().padLeft(2, '0')}:'
+                            '${date.minute.toString().padLeft(2, '0')}';
+
+                        return ListTile(
+                          title: Text('Clase ${index + 1}'),
+                          subtitle: Text(formattedDate),
+                          trailing: alreadyMarked
+                              ? Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: const [
+                                    Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text('Asistió'),
+                                  ],
+                                )
+                              : const Text('Escanea el QR'),
+                        );
+                      },
+                    );
+                  },
                 );
-              }
-
-              if (!attendanceSnapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              final attendanceList = attendanceSnapshot.data!;
-
-              return ListView.separated(
-                itemCount: doneClasses.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (context, index) {
-                  final courseClass = doneClasses[index];
-
-                  final alreadyMarked = attendanceList.any(
-                    (att) =>
-                        att.class_id == courseClass.id && att.present == true,
-                  );
-
-                  final date = courseClass.date;
-                  final formattedDate =
-                      '${date.day.toString().padLeft(2, '0')}/'
-                      '${date.month.toString().padLeft(2, '0')}/'
-                      '${date.year} '
-                      '${date.hour.toString().padLeft(2, '0')}:'
-                      '${date.minute.toString().padLeft(2, '0')}';
-
-                  return ListTile(
-                    title: Text('Clase ${index + 1}'),
-                    subtitle: Text(formattedDate),
-                    trailing: alreadyMarked
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: const [
-                              Icon(Icons.check_circle, color: Colors.green),
-                              SizedBox(width: 4),
-                              Text('Asistió'),
-                            ],
-                          )
-                        : ElevatedButton(
-                            onPressed: () => _markAttendance(courseClass),
-                            child: const Text('Marcar asistencia'),
-                          ),
-                  );
-                },
-              );
-            },
-          );
-        },
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

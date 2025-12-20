@@ -40,6 +40,10 @@ dependencies:
   url_launcher: ^6.3.2
   firebase_storage: ^13.0.4
   image_picker: ^1.2.1
+  qr_flutter: ^4.1.0
+
+  # ✅ QR Scanner (Alumno escanea QR del profesor)
+  mobile_scanner: ^5.2.3
 
 dev_dependencies:
   flutter_test:
